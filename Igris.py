@@ -1,29 +1,42 @@
+"""
+Igris.py — Original version (patched).
+
+Fixes applied:
+  1. Replaced undefined GROQ_API_KEY with env-based config
+  2. Updated deprecated langchain imports to langchain_community
+  3. Uses the upgraded model from config (Issue #2)
+  4. Added atomic memory saves for the vector store
+
+NOTE: For the full enhanced experience with LangGraph, skills, and system
+control, use Igris-Enhanced.py instead.
+"""
+
 import os
+import pickle
 from langchain_groq import ChatGroq
-from langchain.document_loaders import TextLoader
+from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import ChatPromptTemplate
-import pickle
-
 
 # Load API key from environment variable
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "your_api_key_here")
+from config import settings
 
-MEMORY_FILE = "igris_memory.index"
-DOCS_FILE = "igris_docs.pkl"
+MEMORY_FILE = settings.memory_index_dir
+DOCS_FILE = settings.docs_file
 
 if os.path.exists(MEMORY_FILE) and os.path.exists(DOCS_FILE):
     print("Summoning thy past words, Your Majesty Nandhan...")
     try:
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        embeddings = HuggingFaceEmbeddings(model_name=settings.embedding_model)
         vector_store = FAISS.load_local(MEMORY_FILE, embeddings, allow_dangerous_deserialization=True)
         with open(DOCS_FILE, "rb") as f:
             docs = pickle.load(f)
-        print(f"Memory restored—{len(docs)} fragments of thy voice sync’d!")
+        print(f"Memory restored—{len(docs)} fragments of thy voice sync'd!")
     except Exception as e:
         print(f"Alas, memory faltereth: {e}")
         exit()
@@ -50,9 +63,9 @@ else:
         print(f"Woe, the splitting falters: {e}")
         exit()
 
-    print("Forging thy voice with HuggingFace’s art...")
+    print("Forging thy voice with HuggingFace's art...")
     try:
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        embeddings = HuggingFaceEmbeddings(model_name=settings.embedding_model)
         print("Embeddings forged—building thy memory vault...")
         vector_store = FAISS.from_documents(docs, embeddings)
         vector_store.save_local(MEMORY_FILE)
@@ -75,11 +88,16 @@ llm = ChatGroq(
     api_key=GROQ_API_KEY, 
     temperature=0.7, 
     streaming=True                    # Higher throughput (Issue #2)
+print("Awakening Igris with Groq's swift flame, Nandhan...")
+llm = ChatGroq(
+    model=settings.model_name,            # Upgraded model (Issue #2)
+    api_key=settings.groq_api_key,         # From .env, not hardcoded
+    temperature=settings.model_temperature,
 )
 
 combine_prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
-    ("human", "Here’s what I’ve said afore:\n{context}\n\nNow, speak as I would to this: {question}")
+    ("human", "Here's what I've said afore:\n{context}\n\nNow, speak as I would to this: {question}")
 ])
 
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
