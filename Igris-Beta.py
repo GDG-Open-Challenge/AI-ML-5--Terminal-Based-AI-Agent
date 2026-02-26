@@ -9,6 +9,7 @@ from gtts import gTTS
 import _engine_trans_
 import serial
 import serial.tools.list_ports
+from skills import ALL_SKILLS, list_skills
 
 __temp__ = "__temp__voice__.mp3"
 
@@ -56,6 +57,7 @@ chain = ConversationChain(
     verbose=False
 )
 print("Iam Summoned right here My King, Command Me!")
+print(list_skills())
 __temp__ = "Iam Summoned right here My King, Command Me!"
 __temp__voice = '__temp__.mp3'
 
