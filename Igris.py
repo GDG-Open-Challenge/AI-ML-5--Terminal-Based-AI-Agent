@@ -10,7 +10,8 @@ from langchain.prompts import ChatPromptTemplate
 import pickle
 
 
-#GROQ_API_KEY = "null"
+# Load API key from environment variable
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "your_api_key_here")
 
 MEMORY_FILE = "igris_memory.index"
 DOCS_FILE = "igris_docs.pkl"
@@ -69,7 +70,12 @@ system_prompt = (
 )
 
 print("Awakening Igris with Groq’s swift flame, Nandhan...")
-llm = ChatGroq(model="llama3-8b-8192", api_key=GROQ_API_KEY, temperature=0.7)
+llm = ChatGroq(
+    model="llama-3.1-70b-versatile",  # Upgraded model (Issue #2)
+    api_key=GROQ_API_KEY, 
+    temperature=0.7, 
+    streaming=True                    # Higher throughput (Issue #2)
+)
 
 combine_prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),

@@ -18,7 +18,8 @@ __temp__ = "__temp__voice__.mp3"
 #voice.setProperty('rate', 125)
 
 
-#GROQ_API_KEY = "null"
+# Load API key from environment variable
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "your_api_key_here")
 MEMORY_FILE = "igris_chat_memory.pkl"
 
 
@@ -48,7 +49,13 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 print("Awakening Igris with Groq’s might, Nandhan...")
-llm = ChatGroq(model="llama3-8b-8192", api_key=GROQ_API_KEY, temperature=1, max_tokens=500)
+llm = ChatGroq(
+    model="llama-3.1-70b-versatile",  # Upgraded model (Issue #2)
+    api_key=GROQ_API_KEY, 
+    temperature=0.7, 
+    max_tokens=2048,                  # Increased capacity (Issue #2)
+    streaming=True                    # Higher throughput (Issue #2)
+)
 chain = ConversationChain(
     llm=llm,
     memory=memory,
