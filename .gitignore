@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary audio files
+*.mp3
+
+# Memory / pickle files
+*.pkl
+igris_memory.index/
+igris_chat_memory.pkl
+
+# OS files
+.DS_Store
+Thumbs.db
