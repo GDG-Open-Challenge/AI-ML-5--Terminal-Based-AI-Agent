@@ -21,6 +21,18 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from gtts import gTTS
+import _engine_trans_
+import serial
+import serial.tools.list_ports
+
+from memory import load_memory, save_memory
+
+__temp__ = "__temp__voice__.mp3"
+
+#voice = tts.init()
+#rate = voice.getProperty("rate")
+#print(rate)
+#voice.setProperty('rate', 125)
 
 # Use the new config module for API key and settings
 from config import settings
@@ -94,7 +106,7 @@ while True:
 
     if user_input.lower() == "quit":
         print("Saving thy memory afore I rest...")
-        save_memory(memory, MEMORY_FILE)  # Atomic save
+        save_memory(memory, MEMORY_FILE)
         print("Igris: Fare thee well, Your Majesty Nandhan. I await my summons.")
         break
 
@@ -105,6 +117,16 @@ while True:
     try:
         response = chain({"input": user_input})["response"]
         print(f"Igris: {response}")
+        print("="*10)
+        
+        # Real-time atomic memory save
+        save_memory(memory, MEMORY_FILE)
+
+        #voice = gTTS(response, lang='en-uk', slow=False)
+        
+        #os.system(f"mpg123 {__temp__}")
+        #voice.say(response)
+        #voice.runAndWait()
         print("=" * 10)
 
         # Real-time memory save after every exchange (fixes corruption issue)
