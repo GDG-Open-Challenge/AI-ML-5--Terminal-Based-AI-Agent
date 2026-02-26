@@ -21,6 +21,17 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from gtts import gTTS
+import _engine_trans_
+import serial
+import serial.tools.list_ports
+from system_control import system_control
+
+__temp__ = "__temp__voice__.mp3"
+
+#voice = tts.init()
+#rate = voice.getProperty("rate")
+#print(rate)
+#voice.setProperty('rate', 125)
 
 # Use the new config module for API key and settings
 from config import settings
@@ -97,6 +108,15 @@ while True:
         save_memory(memory, MEMORY_FILE)  # Atomic save
         print("Igris: Fare thee well, Your Majesty Nandhan. I await my summons.")
         break
+    elif user_input.lower() == 'translate':
+        re = _engine_trans_.__start__engine__(input("Source Lang: "), input("Target Lnag: "), input("Sequence: "))
+        print(re)
+        continue
+
+    elif user_input.lower().startswith("system "):
+        action = user_input.lower().split(" ", 1)[1]
+        print(system_control(action))
+        continue
 
     elif user_input.lower() == 'translate':
         __transition__(mode='translate')
