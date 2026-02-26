@@ -20,6 +20,11 @@ from typing import List, Optional
 from langchain.memory import ConversationBufferMemory
 from langchain_core.messages import BaseMessage
 MEMORY_FILE = "igris_chat_memory.pkl"
+from rich.console import Console
+
+from config import settings
+
+console = Console()
 
 
 def _atomic_write(filepath: str, data: dict) -> None:
@@ -58,6 +63,7 @@ def save_memory(memory: ConversationBufferMemory, filepath: Optional[str] = None
     2. Atomically write the new memory.
     """
     filepath = filepath or MEMORY_FILE
+    filepath = filepath or settings.memory_file
     backup_path = filepath + ".bak"
 
     # Create backup of the current file (if any)
@@ -78,6 +84,7 @@ def load_memory(filepath: Optional[str] = None) -> ConversationBufferMemory:
     and starts fresh if both are unusable.
     """
     filepath = filepath or MEMORY_FILE
+    filepath = filepath or settings.memory_file
     backup_path = filepath + ".bak"
 
     for path_to_try in (filepath, backup_path):
@@ -98,4 +105,18 @@ def load_memory(filepath: Optional[str] = None) -> ConversationBufferMemory:
             print(f"Could not load {os.path.basename(path_to_try)}: {exc}")
 
     print("Starting with fresh memory vault.")
+                console.print(
+                    "[yellow]Primary memory was corrupt — restored from backup.[/yellow]"
+                )
+            else:
+                console.print(
+                    f"[green]Memory restored — {len(messages)} messages loaded.[/green]"
+                )
+            return memory
+        except Exception as exc:
+            console.print(
+                f"[red]Could not load {os.path.basename(path_to_try)}: {exc}[/red]"
+            )
+
+    console.print("[cyan]Starting with fresh memory vault.[/cyan]")
     return ConversationBufferMemory(return_messages=True)
