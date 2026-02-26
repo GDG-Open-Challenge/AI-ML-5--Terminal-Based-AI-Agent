@@ -9,6 +9,8 @@ from gtts import gTTS
 import _engine_trans_
 import serial
 import serial.tools.list_ports
+from dotenv import load_dotenv
+load_dotenv()
 
 __temp__ = "__temp__voice__.mp3"
 
@@ -17,8 +19,12 @@ __temp__ = "__temp__voice__.mp3"
 #print(rate)
 #voice.setProperty('rate', 125)
 
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("Please set GROQ_API_KEY as an environment variable.")
 
-#GROQ_API_KEY = "null"
+
+llm = ChatGroq(model="llama3-8b-8192", api_key=GROQ_API_KEY)
 MEMORY_FILE = "igris_chat_memory.pkl"
 
 
