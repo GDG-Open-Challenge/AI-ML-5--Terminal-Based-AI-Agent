@@ -1,0 +1,8 @@
+langchain
+langchain-groq
+langgraph
+faiss-cpu
+sentence-transformers
+boto3
+pypdf
+docx2txt

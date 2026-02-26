@@ -1,66 +1,65 @@
 import os
+import pickle
 from langchain_groq import ChatGroq
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import ChatPromptTemplate
-import pickle
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
+
+from ingest_workflow import run_ingestion_workflow
 
 
-#GROQ_API_KEY = "null"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 MEMORY_FILE = "igris_memory.index"
 DOCS_FILE = "igris_docs.pkl"
+DEFAULT_CHAT_FILES = ["memo/chat1.txt"]
 
-if os.path.exists(MEMORY_FILE) and os.path.exists(DOCS_FILE):
-    print("Summoning thy past words, Your Majesty Nandhan...")
-    try:
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-        vector_store = FAISS.load_local(MEMORY_FILE, embeddings, allow_dangerous_deserialization=True)
-        with open(DOCS_FILE, "rb") as f:
-            docs = pickle.load(f)
-        print(f"Memory restored—{len(docs)} fragments of thy voice sync’d!")
-    except Exception as e:
-        print(f"Alas, memory faltereth: {e}")
-        exit()
-else:
-    print("Loading thy sacred chats anew, Your Majesty Nandhan...")
-    chat_files = ["memo/chat1.txt"]
-    documents = []
-    for file in chat_files:
-        try:
-            loader = TextLoader(file)
-            documents.extend(loader.load())
-            print(f"Loaded {file}, thy voice groweth!")
-        except Exception as e:
-            print(f"Alas, {file} eludeth me: {e}")
-            exit()
-    print(f"Loaded {len(documents)} scrolls of thy essence.")
+def ensure_index_bootstrap():
+    if os.path.exists(MEMORY_FILE) and os.path.exists(DOCS_FILE):
+        return
 
-    print("Splitting thy words into fragments...")
-    text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    try:
-        docs = text_splitter.split_documents(documents)
-        print(f"Fragmented into {len(docs)} pieces.")
-    except Exception as e:
-        print(f"Woe, the splitting falters: {e}")
-        exit()
+    print("No memory index found. Bootstrapping from local chat files...")
+    for file in DEFAULT_CHAT_FILES:
+        if not os.path.exists(file):
+            print(f"Skipping missing bootstrap file: {file}")
+            continue
+        result = run_ingestion_workflow(
+            input_path=file,
+            memory_file=MEMORY_FILE,
+            docs_file=DOCS_FILE,
+            bucket_name=None,
+        )
+        if result.get("error"):
+            raise RuntimeError(result["error"])
 
-    print("Forging thy voice with HuggingFace’s art...")
-    try:
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-        print("Embeddings forged—building thy memory vault...")
-        vector_store = FAISS.from_documents(docs, embeddings)
-        vector_store.save_local(MEMORY_FILE)
-        with open(DOCS_FILE, "wb") as f:
-            pickle.dump(docs, f)
-        print("Vault forged and saved, thy voice endureth!")
-    except Exception as e:
-        print(f"Alas, Your Majesty Nandhan, a foe strikes at the embeddings: {e}")
-        exit()
+
+def load_vector_store():
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    return FAISS.load_local(
+        MEMORY_FILE,
+        embeddings,
+        allow_dangerous_deserialization=True,
+    )
+
+
+def build_chain(llm, vector_store, memory, combine_prompt):
+    retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+    return ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        retriever=retriever,
+        memory=memory,
+        combine_docs_chain_kwargs={"prompt": combine_prompt},
+        verbose=True,
+    )
+
+
+ensure_index_bootstrap()
+vector_store = load_vector_store()
+with open(DOCS_FILE, "rb") as f:
+    docs = pickle.load(f)
+print(f"Memory restored—{len(docs)} fragments available.")
 
 
 system_prompt = (
@@ -69,6 +68,8 @@ system_prompt = (
 )
 
 print("Awakening Igris with Groq’s swift flame, Nandhan...")
+if not GROQ_API_KEY:
+    raise RuntimeError("Set GROQ_API_KEY before running.")
 llm = ChatGroq(model="llama3-8b-8192", api_key=GROQ_API_KEY, temperature=0.7)
 
 combine_prompt = ChatPromptTemplate.from_messages([
@@ -77,21 +78,47 @@ combine_prompt = ChatPromptTemplate.from_messages([
 ])
 
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-retriever = vector_store.as_retriever(search_kwargs={"k": 3})
-chain = ConversationalRetrievalChain.from_llm(
-    llm=llm,
-    retriever=retriever,
-    memory=memory,
-    combine_docs_chain_kwargs={"prompt": combine_prompt},
-    verbose=True
-)
+chain = build_chain(llm=llm, vector_store=vector_store, memory=memory, combine_prompt=combine_prompt)
 print("Igris standeth at thy command, Nandhan, forged in thy likeness!")
+print("Commands: /ingest <path> [s3-bucket], /help, quit")
+
 
 while True:
     user_input = input("Your Majesty: ")
     if user_input.lower() == "quit":
         print("Igris: Fare thee well, Your Majesty Nandhan. I await thy next call.")
         break
+    if user_input.strip().lower() == "/help":
+        print("Usage:")
+        print("  /ingest <local_path> [s3_bucket]  -> read docs, index them, optional cloud upload")
+        print("  quit                              -> exit")
+        continue
+    if user_input.strip().lower().startswith("/ingest "):
+        parts = user_input.split()
+        if len(parts) < 2:
+            print("Igris: Provide a file/folder path. Example: /ingest docs/ my-bucket-name")
+            continue
+        ingest_path = parts[1]
+        bucket = parts[2] if len(parts) > 2 else os.getenv("IGRIS_S3_BUCKET")
+        print(f"Igris: Ingesting {ingest_path}...")
+        result = run_ingestion_workflow(
+            input_path=ingest_path,
+            memory_file=MEMORY_FILE,
+            docs_file=DOCS_FILE,
+            bucket_name=bucket,
+            cloud_prefix="igris",
+        )
+        if result.get("error"):
+            print(f"Igris: Ingestion failed: {result['error']}")
+            continue
+        if result.get("cloud_uri"):
+            print(f"Igris: Cloud upload complete -> {result['cloud_uri']}")
+        else:
+            print("Igris: Indexed locally. Cloud upload skipped.")
+        vector_store = load_vector_store()
+        chain = build_chain(llm=llm, vector_store=vector_store, memory=memory, combine_prompt=combine_prompt)
+        continue
+
     try:
         response = chain({"question": user_input})["answer"]
         print(f"Igris: {response}")
