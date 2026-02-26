@@ -1,0 +1,38 @@
+# Core LLM
+langchain>=0.2.0
+langchain-groq>=0.1.0
+langchain-community>=0.2.0
+
+# LangGraph for workflow orchestration (Issue #3)
+langgraph>=0.2.0
+
+# Pydantic AI support (Issue #3)
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Embeddings & Vector Store
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.4
+
+# Document Reading (Issue #3)
+PyPDF2>=3.0.0
+python-docx>=1.0.0
+openpyxl>=3.1.0
+chardet>=5.0.0
+
+# System Control (safe subprocess wrapper)
+psutil>=5.9.0
+
+# Web Search skill
+duckduckgo-search>=5.0.0
+
+# Text-to-Speech (optional)
+gTTS>=2.3.0
+
+# Translation engine
+deep-translator>=1.11.0
+
+# Utilities
+python-dotenv>=1.0.0
+colorama>=0.4.6
+rich>=13.0.0
