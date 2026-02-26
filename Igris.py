@@ -1,16 +1,21 @@
 import os
-from langchain_groq import ChatGroq
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import ChatPromptTemplate
 import pickle
+from dotenv import load_dotenv
+from langchain_groq import ChatGroq
+from langchain_community.document_loaders import TextLoader
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
+from langchain_classic.memory import ConversationBufferMemory
+from langchain_classic.chains import ConversationalRetrievalChain
+from langchain_core.prompts import ChatPromptTemplate
 
 
-#GROQ_API_KEY = "null"
+load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY not found in environment.")
 
 MEMORY_FILE = "igris_memory.index"
 DOCS_FILE = "igris_docs.pkl"
@@ -85,6 +90,7 @@ chain = ConversationalRetrievalChain.from_llm(
     combine_docs_chain_kwargs={"prompt": combine_prompt},
     verbose=True
 )
+
 print("Igris standeth at thy command, Nandhan, forged in thy likeness!")
 
 while True:

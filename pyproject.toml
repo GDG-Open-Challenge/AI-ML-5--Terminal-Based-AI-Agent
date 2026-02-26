@@ -1,0 +1,20 @@
+[project]
+name = "ai-ml-5-terminal-based-ai-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "langchain",
+    "langchain-community",
+    "langchain-groq",
+    "faiss-cpu",
+    "sentence-transformers",
+    "huggingface-hub",
+    "gtts",
+    "python-dotenv",
+    "pyserial"
+]
+
+[tool.uv]
+dev-dependencies = []
