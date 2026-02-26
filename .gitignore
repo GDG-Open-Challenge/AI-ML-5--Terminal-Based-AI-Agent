@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Memory files (user-specific)
+*.pkl
+*.pkl.bak
+igris_memory.index/
+
+# Audio temp files
+*.mp3
+
+# OS files
+Thumbs.db
+.DS_Store
