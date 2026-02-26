@@ -9,6 +9,7 @@ from gtts import gTTS
 import _engine_trans_
 import serial
 import serial.tools.list_ports
+from system_control import system_control
 
 __temp__ = "__temp__voice__.mp3"
 
@@ -111,7 +112,12 @@ while True:
     elif user_input.lower() == 'translate':
         re = _engine_trans_.__start__engine__(input("Source Lang: "), input("Target Lnag: "), input("Sequence: "))
         print(re)
-        break
+        continue
+
+    elif user_input.lower().startswith("system "):
+        action = user_input.lower().split(" ", 1)[1]
+        print(system_control(action))
+        continue
 
     
 
