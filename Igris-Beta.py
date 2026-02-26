@@ -26,6 +26,10 @@ from gtts import gTTS
 from config import settings
 from memory import load_memory, save_memory
 
+# Load API key from environment variable
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "your_api_key_here")
+MEMORY_FILE = "igris_chat_memory.pkl"
+
 MEMORY_FILE = settings.memory_file
 
 system_prompt = """
@@ -41,6 +45,13 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}")
 ])
 
+print("Awakening Igris with Groq’s might, Nandhan...")
+llm = ChatGroq(
+    model="llama-3.1-70b-versatile",  # Upgraded model (Issue #2)
+    api_key=GROQ_API_KEY, 
+    temperature=0.7, 
+    max_tokens=2048,                  # Increased capacity (Issue #2)
+    streaming=True                    # Higher throughput (Issue #2)
 print("Awakening Igris with Groq's might, Nandhan...")
 llm = ChatGroq(
     model=settings.model_name,           # Upgraded model (Issue #2)

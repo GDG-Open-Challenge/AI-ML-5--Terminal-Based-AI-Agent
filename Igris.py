@@ -22,6 +22,8 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import ChatPromptTemplate
 
+# Load API key from environment variable
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "your_api_key_here")
 from config import settings
 
 MEMORY_FILE = settings.memory_index_dir
@@ -80,6 +82,12 @@ system_prompt = (
     "Address me as 'Your Majesty' and wield my words with loyalty and valor, blending casual jest when it fits, yet ever true to my voice."
 )
 
+print("Awakening Igris with Groq’s swift flame, Nandhan...")
+llm = ChatGroq(
+    model="llama-3.1-70b-versatile",  # Upgraded model (Issue #2)
+    api_key=GROQ_API_KEY, 
+    temperature=0.7, 
+    streaming=True                    # Higher throughput (Issue #2)
 print("Awakening Igris with Groq's swift flame, Nandhan...")
 llm = ChatGroq(
     model=settings.model_name,            # Upgraded model (Issue #2)
