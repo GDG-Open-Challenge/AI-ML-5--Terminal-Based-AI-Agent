@@ -21,6 +21,17 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from gtts import gTTS
+import _engine_trans_
+import serial
+import serial.tools.list_ports
+from skills import ALL_SKILLS, list_skills
+
+__temp__ = "__temp__voice__.mp3"
+
+#voice = tts.init()
+#rate = voice.getProperty("rate")
+#print(rate)
+#voice.setProperty('rate', 125)
 
 # Use the new config module for API key and settings
 from config import settings
@@ -54,7 +65,10 @@ chain = ConversationChain(
     prompt=prompt,
     verbose=False
 )
-print("I am Summoned right here My King, Command Me!")
+print("Iam Summoned right here My King, Command Me!")
+print(list_skills())
+__temp__ = "Iam Summoned right here My King, Command Me!"
+__temp__voice = '__temp__.mp3'
 
 
 def __transition__(mode=None, user_input=None):

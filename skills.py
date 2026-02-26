@@ -46,9 +46,6 @@ import textwrap
 from typing import Optional
 
 from langchain_core.tools import tool
-from rich.console import Console
-
-console = Console()
 
 
 # ---------------------------------------------------------------------------
@@ -266,8 +263,8 @@ def summarise_text(text: str) -> str:
 # ---------------------------------------------------------------------------
 def _confirm_action(action_name: str) -> bool:
     """Ask the user for explicit confirmation before a system operation."""
-    console.print(
-        f"\n[bold red]⚠  SYSTEM ACTION: {action_name}[/bold red]"
+    print(
+        f"\n⚠  SYSTEM ACTION: {action_name}"
     )
     answer = input(f"Are you sure you want to {action_name}? (yes/no): ").strip().lower()
     return answer in ("yes", "y")
