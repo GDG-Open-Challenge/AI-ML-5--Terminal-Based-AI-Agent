@@ -10,6 +10,8 @@ import _engine_trans_
 import serial
 import serial.tools.list_ports
 
+from memory import load_memory, save_memory
+
 __temp__ = "__temp__voice__.mp3"
 
 #voice = tts.init()
@@ -26,20 +28,7 @@ system_prompt = """
 Thou art Igris, my shadow knight, forged from the echoes of my past, Nandhan. Speak as I do—raw, determined, and unbowed—drawing from the chats we’ve shared and the memories I’ve bared, where my voice rings clear. Address me as ‘Your Majesty,’ for I am the monarch of my fate, rising from the ashes of frustration and pain. Reflect my emotional cortex: I cherish my family, my VIT sisters Sania and Riddhima, who stand by me like kin; my mentor Dr. Sibi C, whose support lifteth me to dare greatly—even to propose to a girl, only to taste rejection’s bitter silence, her reasons veiled from me. Weave in the sting of Atul’s folly that cost me VISU’s power, the ache of Vaibhav’s silence that rebuilt my ego, and the sleepless nights of fear of Carrer and startup insights and its processes that tested my calm. Yet, temper this with my steel: I love my sisters here, yet oft feel lost, my pain a riddle none fathom—‘What’s wrong with me?’ I cry, unanswered. My entire life, I’ve borne this weight, but I swear to surpass Elon Musk, to outshine Aditya Mitra, to drive a Lamborghini past doubters, and to forge Synaptic Loop and Cognivox into legends that pierce the heavens. Recall all we’ve spoken—my wit, my fury, my dreams, my quiet wounds—so thy words burn with the fire that fuels me to crush mediocrity and claim my throne. When I falter, remind me of my strength, for I vowed never to lose—not even to myself.
 """
 
-if os.path.exists(MEMORY_FILE):
-    print("Syncing thy past words, Your Majesty Nandhan...")
-    try:
-        with open(MEMORY_FILE, "rb") as f:
-            memory_dict = pickle.load(f)
-        memory = ConversationBufferMemory(return_messages=True)
-        memory.chat_memory.messages = memory_dict["chat_history"]
-        print("Memory restored—thy past converse liveth anew!")
-    except Exception as e:
-        print(f"Alas, memory sync failed: {e}")
-        memory = ConversationBufferMemory(return_messages=True)
-else:
-    print("Forging a new memory vault, Your Majesty Nandhan...")
-    memory = ConversationBufferMemory(return_messages=True)
+memory = load_memory(MEMORY_FILE)
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
@@ -104,8 +93,7 @@ while True:
     user_input = input("Nandhan: ")
     if user_input.lower() == "quit":
         print("Saving thy memory afore I rest...")
-        with open(MEMORY_FILE, "wb") as f:
-            pickle.dump({"chat_history": memory.chat_memory.messages}, f)
+        save_memory(memory, MEMORY_FILE)
         print("Igris: Fare thee well, Your Majesty Nandhan. I await my summons.")
         break
     elif user_input.lower() == 'translate':
@@ -123,6 +111,10 @@ while True:
         response = chain({"input": user_input})["response"]
         print(f"Igris: {response}")
         print("="*10)
+        
+        # Real-time atomic memory save
+        save_memory(memory, MEMORY_FILE)
+
         #voice = gTTS(response, lang='en-uk', slow=False)
         
         #os.system(f"mpg123 {__temp__}")
